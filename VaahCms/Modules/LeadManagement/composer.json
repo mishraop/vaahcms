@@ -1,0 +1,28 @@
+{
+    "name": "vaahcms/leadmanagement",
+    "description": "lead management system",
+    "version": "0.0.1",
+    "authors": [
+        {
+            "name": "satyam",
+            "email": "support@vaah.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "VaahCms\\Modules\\LeadManagement\\Providers\\LeadManagementServiceProvider"
+            ],
+            "aliases": {
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "VaahCms\\Modules\\LeadManagement\\": ""
+        }
+    }
+}

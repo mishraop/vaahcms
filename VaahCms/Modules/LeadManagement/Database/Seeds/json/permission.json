@@ -1,0 +1,8 @@
+[
+    {
+        "name": "Can Read All Leads",
+        "module": "vaahcms",
+        "section": "dashboard",
+        "details": "This will allow user to see the link of dashboard."
+    }
+]
