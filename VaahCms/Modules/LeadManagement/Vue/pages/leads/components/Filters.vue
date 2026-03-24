@@ -54,7 +54,30 @@ const store = useLeadStore();
                     @item-unselect="store.onTagUnselect"
                 />             
             </VhFieldVertical>
-            
+            <VhFieldVertical >
+                <template #label>
+                    <b>Assigned To:</b>
+                </template>
+                <AutoComplete
+                    v-model="store.selectedUsers"
+                    optionLabel="name"
+                    multiple
+                    dropdown
+                    :suggestions="store.users"
+                    @complete="store.searchUser"
+                    @item-select="store.onUserSelect"
+                    @item-unselect="store.onUserUnselect"
+                />             
+            </VhFieldVertical>
+            <VhFieldVertical>
+                <template #label>
+                    <b>Status</b>
+                </template>
+                <Dropdown v-model="store.query.filter.status" 
+                        :options="store.assets?.status" optionLabel="name" optionValue="id" 
+                        placeholder="Select a Status" checkmark :highlightOnSelect="false"
+                         class="w-full " />
+            </VhFieldVertical>
             <VhFieldVertical >
                 <template #label>
                     <b>Sort By:</b>

@@ -88,6 +88,23 @@ const useVaah = vaah();
                 </template>
 
             </Column>
+            <Column field="follow_up_count" header="Follow Ups"
+                    class="overflow-wrap-anywhere"
+                    :sortable="true">
+
+                <template #body="prop">
+                    <div v-if="prop.data.follow_up.length>0">
+<Badge class="cursor-pointer" @click="store.viewFollowUps(prop.data)">{{prop.data.follow_up.length}}</Badge>
+                    </div>
+                    <div v-else>
+<Badge>0</Badge>
+                    </div>
+
+
+
+                </template>
+
+            </Column>
             <Column field="assigned_to" header="Assigned User"
                     class="overflow-wrap-anywhere"
                     :sortable="true">
@@ -114,7 +131,7 @@ const useVaah = vaah();
             </Column>
 
 
-                <Column field="updated_at" header="Updated"
+                <!-- <Column field="updated_at" header="Updated"
                         v-if="store.isViewLarge()"
                         style="width:150px;"
                         :sortable="true">
@@ -123,9 +140,9 @@ const useVaah = vaah();
                         {{useVaah.strToSlug(prop.data.updated_at)}}
                     </template>
 
-                </Column>
+                </Column> -->
 
-            <Column field="is_active" v-if="store.isViewLarge()"
+            <!-- <Column field="is_active" v-if="store.isViewLarge()"
                     :sortable="true"
                     style="width:100px;"
                     header="Is Active">
@@ -139,7 +156,7 @@ const useVaah = vaah();
                     </InputSwitch>
                 </template>
 
-            </Column>
+            </Column> -->
 
             <Column field="actions" style="width:150px;"
                     :style="{width: store.getActionWidth() }"
@@ -204,5 +221,69 @@ const useVaah = vaah();
         <!--/paginator-->
 
     </div>
+<Sidebar 
+    v-model:visible="store.view_sidebar" 
+    header="Lead Follow Ups" 
+    position="right"
+     style="width: 700px;"
 
+>
+    <div v-if="store.selected_lead">
+
+        <!-- Lead Info -->
+        <div class="mb-4">
+            <h3 class="text-lg font-semibold">
+                {{ store.selected_lead.name }}
+            </h3>
+            <p class="text-sm text-gray-500">
+                {{ store.selected_lead.email }}
+            </p>
+        </div>
+
+        <!-- Follow Ups Table -->
+        <DataTable 
+            :value="store.selected_lead.follow_up" 
+            responsiveLayout="scroll"
+            stripedRows
+        >
+
+            <Column field="id" header="#" style="width: 60px"></Column>
+
+            <Column header="Follow Up Date">
+                <template #body="slotProps">
+                    <Badge 
+                v-if="store.getFollowUpStatus(slotProps.data)"
+                :value="store.getFollowUpStatus(slotProps.data).label"
+                :severity="store.getFollowUpStatus(slotProps.data).severity"
+            />
+                    {{ slotProps.data.follow_up_date }}
+                </template>
+            </Column>
+
+            <Column header="Time">
+                <template #body="slotProps">
+                    {{ slotProps.data.follow_up_time }}
+                </template>
+            </Column>
+
+            <Column field="note" header="Note"></Column>
+
+            <Column header="Status">
+                <template #body="slotProps">
+                    <Tag :value="slotProps.data.status.name" severity="success" />
+                </template>
+            </Column>
+
+        </DataTable>
+
+        <!-- Empty State -->
+        <div 
+            v-if="!store.selected_lead.follow_up || store.selected_lead.follow_up.length === 0"
+            class="text-center text-gray-500 mt-4"
+        >
+            No follow-ups found
+        </div>
+
+    </div>
+</Sidebar>
 </template>

@@ -20,7 +20,7 @@ let empty_states = {
             sort: null,
             tag_ids :[],
             selectedTags :[],
-            selectedUsers: []
+            selectedUsers :[]
         },
     },
     action: {
@@ -68,7 +68,9 @@ export const useLeadStore = defineStore({
         list_create_menu: [],
         item_menu_list: [],
         item_menu_state: null,
-        form_menu_list: []
+        form_menu_list: [],
+        view_sidebar:false,
+        selected_lead:null,
     }),
     getters: {
 
@@ -959,7 +961,71 @@ export const useLeadStore = defineStore({
                 this.query.filter.tag_ids = this.query.filter.tag_ids.filter(
                     id => id !== e.value.id
                 );
-            }          
+            },
+            async searchUser(event) {
+            let query = event.query;
+        
+            await vaah().ajax(
+                ajax_url +'/users' +'?search=' + query,
+            this.searchUserAfter
+            );
+            },
+        
+             searchUserAfter(data,res){
+                this.users=data;
+                
+             },
+             onUserSelect(e) {
+                if (!this.query.filter.users) {
+                    this.query.filter.users = [];
+                }
+
+                this.query.filter.users.push(e.value.id);
+            },
+
+            onUserUnselect(e) {
+                this.query.filter.users = this.query.filter.users.filter(
+                    id => id !== e.value.id
+                );
+            },
+            
+            
+viewFollowUps(lead) {
+    this.selected_lead = lead;
+    this.view_sidebar = true;
+},
+ getFollowUpStatus(followUp) {
+    if (!followUp || !followUp.follow_up_date) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const followDate = new Date(followUp.follow_up_date);
+    followDate.setHours(0, 0, 0, 0);
+
+    // If deleted
+    if (followUp.deleted_at) {
+        return { label: 'Trashed', severity: 'danger' };
+    }
+
+    // Missed
+    if (followDate < today) {
+        return { label: 'Missed', severity: 'danger' };
+    }
+
+    // Today
+    if (followDate.getTime() === today.getTime()) {
+        return { label: 'Today', severity: 'warning' };
+    }
+
+    // Upcoming
+    if (followDate > today) {
+        return { label: 'Upcoming', severity: 'success' };
+    }
+
+    return null;
+},
+
                 }
             });
 

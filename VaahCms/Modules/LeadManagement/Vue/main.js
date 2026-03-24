@@ -33,7 +33,7 @@ import RadioButton from "primevue/radiobutton";
 import Message from "primevue/message";
 import Tag from "primevue/tag";
 import AutoComplete from 'primevue/autocomplete';
-
+import Sidebar from 'primevue/sidebar';
 //-------------/CRUD PrimeVue Imports
 
 
@@ -87,7 +87,7 @@ app.component('DataTable', DataTable);
 app.component('Message', Message);
 app.component('Tag', Tag);
 app.component('AutoComplete',AutoComplete);
-
+app.component('Sidebar',Sidebar);
 //-------------/CRUD PrimeVue Use
 
 

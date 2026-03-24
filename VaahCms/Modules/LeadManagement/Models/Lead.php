@@ -326,6 +326,26 @@ if (isset($inputs['tags']) && is_array($inputs['tags'])) {
         $q->whereIn('tags.id', $tag_ids);
     });
     }
+    public function scopeAssignedToFilter($query, $filter)
+    {
+        if (
+            !isset($filter['users']) ||
+            !is_array($filter['users']) ||
+            empty($filter['users'])
+        ) {
+            return $query;
+        }
+
+        return $query->whereIn('assigned_to', $filter['users']);
+    }
+//    public function followUp()
+// {
+//     return $this->hasOne(Followup::class, 'lead_id');
+// }
+public function followUp()
+{
+    return $this->hasMany(Followup::class, 'lead_id');
+}
     public static function getList($request)
     {
         
@@ -334,7 +354,7 @@ if (isset($inputs['tags']) && is_array($inputs['tags'])) {
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
         $list->tagFilter($request->filter);
-        
+        $list->assignedToFilter($request->filter); 
         
         $rows = config('vaahcms.per_page');
         $user = auth()->user();
@@ -353,7 +373,7 @@ if (isset($inputs['tags']) && is_array($inputs['tags'])) {
         if(isset($request->filter['assigned_to'])){
             $list->where('assigned_to', $request->filter['assigned_to']);
         }
-        $list->with('assignedUser','status','tags');
+        $list->with('assignedUser','status','tags','followUp.status');
         
         $list = $list->paginate($rows);
 
@@ -718,6 +738,26 @@ if (isset($inputs['tags']) && is_array($inputs['tags'])) {
     //-------------------------------------------------
     public static function searchTags($request){
         $query = Tag::query();
+
+    // Search filter
+    if($request->has('search') && $request->search){
+        $search = $request->search;
+
+        $query->where(function($q) use ($search){
+            $q->where('name', 'LIKE', "%{$search}%");
+        });
+    }
+
+    // Limit to 10 results
+    $leads = $query->limit(10)->get();
+
+    return [
+        'success' => true,
+        'data' => $leads
+    ];
+    }
+    public static function searchUser($request){
+        $query = User::query();
 
     // Search filter
     if($request->has('search') && $request->search){

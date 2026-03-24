@@ -10,11 +10,11 @@ Route::group(
         
 ],
 function () {
+    Route::get('/users', [LeadsController::class, 'searchUser'])
+                ->name('vh.backend.leadmanagement.leads.assets');
 
-Route::get('/tags', [LeadsController::class, 'searchTags'])
-        ->name('vh.backend.leadmanagement.leads.assets');
-
-
+    Route::get('/tags', [LeadsController::class, 'searchTags'])
+                ->name('vh.backend.leadmanagement.leads.assets');
     /**
      * Get Assets
      */

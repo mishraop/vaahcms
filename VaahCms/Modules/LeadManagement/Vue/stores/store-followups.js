@@ -943,7 +943,60 @@ export const useFollowupStore = defineStore({
      searchLeadAfter(data,res){
         this.leads=data;
         
-     }
+     },
+     getFollowUpStatus(followUp) {
+    if (!followUp || !followUp.follow_up_date) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const followDate = new Date(followUp.follow_up_date);
+    followDate.setHours(0, 0, 0, 0);
+
+    // If deleted
+    if (followUp.deleted_at) {
+        return { label: 'Trashed', severity: 'danger' };
+    }
+
+    // Missed
+    if (followDate < today) {
+        return { label: 'Missed', severity: 'danger' };
+    }
+
+    // Today
+    if (followDate.getTime() === today.getTime()) {
+        return { label: 'Today', severity: 'warning' };
+    }
+
+    // Upcoming
+    if (followDate > today) {
+        return { label: 'Upcoming', severity: 'success' };
+    }
+
+    return null;
+},
+setRowClass(data) {
+    const status = this.getFollowUpStatus(data);
+
+    if (!status) return '';
+
+    switch (status.label) {
+        case 'Missed':
+            return 'bg-red-50 border-l-4 border-red-400';
+
+        case 'Today':
+            return 'bg-yellow-50 border-l-4 border-yellow-400';
+
+        case 'Upcoming':
+            return 'bg-green-50 border-l-4 border-green-400';
+
+        case 'Trashed':
+            return 'bg-gray-100 opacity-70';
+
+        default:
+            return '';
+    }
+}
         //---------------------------------------------------------------------
     }
 });

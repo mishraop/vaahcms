@@ -149,7 +149,8 @@ const toggleFormMenu = (event) => {
 
                 <VhField label="Follow Up Date">
                     <div class="p-inputgroup">
-                        <Calendar dateFormat="yy-mm-dd"
+                        <Calendar dateOnly
+                                  dateFormat="yy-mm-dd"
                                   class="w-full"
                                    placeholder="follow up date"
                                    name="followups-follow_up_date"

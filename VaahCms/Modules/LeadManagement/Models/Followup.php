@@ -619,16 +619,48 @@ unset($inputs['lead']);
     }
 
     //-------------------------------------------------
-    public static function searchLeads($request)
+//     public static function searchLeads($request)
+// {
+//     $query = Lead::query();
+
+//     $user = auth()->user();
+
+//     if ($user && !$user->hasPermission('can-read-all-leads')) {
+//         $query->where('assigned_to', $user->id);
+//     }
+
+//     if ($request->has('search') && $request->search) {
+//         $search = $request->search;
+
+//         $query->where(function ($q) use ($search) {
+//             $q->where('name', 'LIKE', "%{$search}%")
+//               ->orWhere('email', 'LIKE', "%{$search}%")
+//               ->orWhere('phone', 'LIKE', "%{$search}%");
+//         });
+//     }
+//     $leads = $query->limit(10)->get();
+
+//     return [
+//         'success' => true,
+//         'data' => $leads
+//     ];
+// }
+
+public static function searchLeads($request)
 {
     $query = Lead::query();
 
     $user = auth()->user();
 
+    // ✅ Restrict to assigned user
     if ($user && !$user->hasPermission('can-read-all-leads')) {
         $query->where('assigned_to', $user->id);
     }
 
+    // ❌ Exclude leads that already have follow-up
+    $query->whereDoesntHave('followUp');
+
+    // ✅ Search filter
     if ($request->has('search') && $request->search) {
         $search = $request->search;
 
@@ -638,6 +670,7 @@ unset($inputs['lead']);
               ->orWhere('phone', 'LIKE', "%{$search}%");
         });
     }
+
     $leads = $query->limit(10)->get();
 
     return [

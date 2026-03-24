@@ -5,6 +5,7 @@ import { useFollowupStore } from '../../../stores/store-followups'
 const store = useFollowupStore();
 const useVaah = vaah();
 
+
 </script>
 
 <template>
@@ -41,17 +42,26 @@ const useVaah = vaah();
 
             </Column>
             <Column field="follow_up_date" header="Followed Date"
-                    class="overflow-wrap-anywhere"
-                    :sortable="true">
+        class="overflow-wrap-anywhere"
+        :sortable="true">
 
-                <template #body="prop">
-                    <Badge v-if="prop.data.deleted_at"
-                           value="Trashed"
-                           severity="danger"></Badge>
-                    {{prop.data.follow_up_date}}
-                </template>
+    <template #body="prop">
+        <div class="flex items-center gap-2">
 
-            </Column>
+            <Badge 
+                v-if="store.getFollowUpStatus(prop.data)"
+                :value="store.getFollowUpStatus(prop.data).label"
+                :severity="store.getFollowUpStatus(prop.data).severity"
+            />
+
+            <span>
+                {{ prop.data.follow_up_date }}
+            </span>
+
+        </div>
+    </template>
+
+</Column>
             <Column field="follow_up_time" header="Followed Time"
                     class="overflow-wrap-anywhere"
                     :sortable="true">
