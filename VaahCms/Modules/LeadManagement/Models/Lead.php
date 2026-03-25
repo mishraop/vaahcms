@@ -12,6 +12,7 @@ use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
 use WebReinvent\VaahCms\Models\User;
 use WebReinvent\VaahCms\Libraries\VaahSeeder;
 use WebReinvent\VaahCms\Models\Taxonomy;
+use Carbon\Carbon;
 
 class Lead extends VaahModel
 {
@@ -777,6 +778,224 @@ if (isset($inputs['tags']) && is_array($inputs['tags'])) {
     ];
     }
     //-------------------------------------------------
+//     public static function getDashboardData($request)
+// {
+//     $user = auth()->user();
+
+//     // ----------------------------
+//     // Total Leads
+//     // ----------------------------
+//     $total_leads = \DB::table('leads')->count();
+
+//     // ----------------------------
+//     // Leads by Status
+//     // ----------------------------
+//     $leads_by_status = \DB::table('leads')
+//         ->leftJoin('vh_taxonomies', 'leads.status', '=', 'taxonomies.id')
+//         ->select('taxonomies.name as status_name', \DB::raw('COUNT(leads.id) as total'))
+//         ->groupBy('leads.status', 'taxonomies.name')
+//         ->get();
+
+//     // ----------------------------
+//     // Today's Date
+//     // ----------------------------
+//     $today = \Carbon\Carbon::today();
+
+//     // ----------------------------
+//     // My Followups Today
+//     // ----------------------------
+//     $today_followups = \DB::table('followups')
+//         ->join('leads', 'followups.lead_id', '=', 'leads.id')
+//         ->whereDate('follow_up_date', $today)
+//         ->when($user && !$user->hasPermission('can-read-all-leads'), function ($q) use ($user) {
+//             $q->where('leads.assigned_to', $user->id);
+//         })
+//         ->count();
+
+//     // ----------------------------
+//     // Missed Followups
+//     // ----------------------------
+//     $missed_followups = \DB::table('followups')
+//         ->join('leads', 'followups.lead_id', '=', 'leads.id')
+//         ->whereDate('follow_up_date', '<', $today)
+//         ->when($user && !$user->hasPermission('can-read-all-leads'), function ($q) use ($user) {
+//             $q->where('leads.assigned_to', $user->id);
+//         })
+//         ->count();
+
+//     // ----------------------------
+//     // Recent Followups
+//     // ----------------------------
+//     $recent_followups = \DB::table('followups')
+//         ->join('leads', 'followups.lead_id', '=', 'leads.id')
+//         ->leftJoin('taxonomies', 'leads.status', '=', 'taxonomies.id')
+//         ->select(
+//             'followups.id',
+//             'leads.name as lead_name',
+//             'followups.follow_up_date',
+//             'taxonomies.name as status'
+//         )
+//         ->when($user && !$user->hasPermission('can-read-all-leads'), function ($q) use ($user) {
+//             $q->where('leads.assigned_to', $user->id);
+//         })
+//         ->orderBy('followups.follow_up_date', 'desc')
+//         ->limit(5)
+//         ->get()
+//         ->map(function ($item) use ($today) {
+
+//             $status_label = 'Upcoming';
+
+//             if(\Carbon\Carbon::parse($item->follow_up_date)->isToday()){
+//                 $status_label = 'Today';
+//             }
+//             elseif(\Carbon\Carbon::parse($item->follow_up_date)->isPast()){
+//                 $status_label = 'Missed';
+//             }
+
+//             $item->label = $status_label;
+
+//             return $item;
+//         });
+
+//     // ----------------------------
+//     // FINAL RESPONSE
+//     // ----------------------------
+//     return [
+//         'success' => true,
+//         'data' => [
+//             'total_leads' => $total_leads,
+//             'leads_by_status' => $leads_by_status,
+//             'today_followups' => $today_followups,
+//             'missed_followups' => $missed_followups,
+//             'recent_followups' => $recent_followups,
+//         ]
+//     ];
+// }
+
+
+
+public static function getDashboardData($request)
+{
+    $user = auth()->user();
+    $today = Carbon::today();
+
+    // ---------------------------------
+    // Total Leads
+    // ---------------------------------
+    $total_leads = Lead::count();
+
+    // ---------------------------------
+    // Leads by Status
+    // ---------------------------------
+    // $leads_by_status = Lead::with('status')
+    //     ->select('status')
+    //     ->selectRaw('COUNT(*) as total')
+    //     ->groupBy('status')
+    //     ->get()
+    //     ->map(function ($item) {
+    //         return [
+    //             'status_name' => optional($item->status)->name,
+    //             'total' => $item->total,
+    //         ];
+    //     });
+
+
+
+$grouped = Lead::select('status')
+    ->selectRaw('COUNT(*) as total')
+    ->groupBy('status')
+    ->get();
+
+// Get all status IDs
+$status_ids = $grouped->pluck('status')->filter();
+
+// Fetch status names
+$statuses = Taxonomy::whereIn('id', $status_ids)
+    ->pluck('name', 'id');
+
+// Map result
+$leads_by_status = $grouped->map(function ($item) use ($statuses) {
+    return [
+        'status_name' => $statuses[$item->status] ?? 'Unknown',
+        'total' => $item->total,
+    ];
+});
+
+
+
+
+    // ---------------------------------
+    // My Followups Today
+    // ---------------------------------
+    $today_followups = Followup::whereDate('follow_up_date', $today)
+        ->whereHas('lead', function ($q) use ($user) {
+            if ($user && !$user->hasPermission('can-read-all-leads')) {
+                $q->where('assigned_to', $user->id);
+            }
+        })
+        ->count();
+
+    // ---------------------------------
+    // Missed Followups
+    // ---------------------------------
+    $missed_followups = Followup::whereDate('follow_up_date', '<', $today)
+        ->whereHas('lead', function ($q) use ($user) {
+            if ($user && !$user->hasPermission('can-read-all-leads')) {
+                $q->where('assigned_to', $user->id);
+            }
+        })
+        ->count();
+
+    // ---------------------------------
+    // Recent Followups
+    // ---------------------------------
+    $recent_followups = Followup::with([
+        'lead:id,name,status',
+        'lead.status:id,name'
+    ])
+    ->when($user && !$user->hasPermission('can-read-all-leads'), function ($q) use ($user) {
+        $q->whereHas('lead', function ($q2) use ($user) {
+            $q2->where('assigned_to', $user->id);
+        });
+    })
+    ->latest('follow_up_date')
+    ->limit(5)
+    ->get()
+    ->map(function ($item) {
+
+        $date = \Carbon\Carbon::parse($item->follow_up_date);
+
+        $label = 'Upcoming';
+
+        if ($date->isToday()) {
+            $label = 'Today';
+        } elseif ($date->isPast()) {
+            $label = 'Missed';
+        }
+
+        return [
+            'id' => $item->id,
+            'lead_name' => optional($item->lead)->name,
+            'follow_up_date' => $item->follow_up_date,
+            'status' => optional(optional($item->lead)->status)->name,
+            'label' => $label,
+        ];
+    });
+
+    // ---------------------------------
+    // RESPONSE
+    // ---------------------------------
+    return [
+        'success' => true,
+        'data' => [
+            'total_leads' => $total_leads,
+            'leads_by_status' => $leads_by_status,
+            'today_followups' => $today_followups,
+            'missed_followups' => $missed_followups,
+            'recent_followups' => $recent_followups,
+        ]
+    ];
+}
     //-------------------------------------------------
 
 

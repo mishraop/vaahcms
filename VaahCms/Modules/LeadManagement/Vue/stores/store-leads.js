@@ -71,6 +71,7 @@ export const useLeadStore = defineStore({
         form_menu_list: [],
         view_sidebar:false,
         selected_lead:null,
+        dashboard_data:null,
     }),
     getters: {
 
@@ -1025,6 +1026,25 @@ viewFollowUps(lead) {
 
     return null;
 },
+
+
+            async getDashboardData(){
+            let options = {
+                query: vaah().clone(this.query)
+            };
+           
+            await vaah().ajax(
+                ajax_url +'/dashboard/data',
+            this.getDashboardDataAfter,
+            options
+            );
+        },
+
+
+        getDashboardDataAfter(data,res){
+            this.dashboard_data=data;
+        }
+            
 
                 }
             });

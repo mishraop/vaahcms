@@ -10,6 +10,10 @@ Route::group(
         
 ],
 function () {
+
+Route::get('/dashboard/data', [LeadsController::class, 'getDashboardData'])
+                ->name('vh.backend.leadmanagement.leads.assets');
+
     Route::get('/users', [LeadsController::class, 'searchUser'])
                 ->name('vh.backend.leadmanagement.leads.assets');
 

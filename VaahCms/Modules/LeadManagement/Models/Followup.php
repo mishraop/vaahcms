@@ -10,6 +10,7 @@ use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
 use WebReinvent\VaahCms\Models\User;
 use WebReinvent\VaahCms\Libraries\VaahSeeder;
+use Carbon\Carbon;
 
 class Followup extends VaahModel
 {
@@ -161,30 +162,114 @@ class Followup extends VaahModel
     }
 
     //-------------------------------------------------
-    public static function createItem($request)
-    {
+//     public static function createItem($request)
+//     {
 
-        $inputs = $request->all();
-if (isset($inputs['lead']) && is_array($inputs['lead'])) {
-    $inputs['lead_id'] = $inputs['lead']['id'] ?? null;
-}
+//         $inputs = $request->all();
+// if (isset($inputs['lead']) && is_array($inputs['lead'])) {
+//     $inputs['lead_id'] = $inputs['lead']['id'] ?? null;
+// }
 
-// remove lead object (VERY IMPORTANT)
-unset($inputs['lead']);
-        $validation = self::validation($inputs);
-        if (!$validation['success']) {
-            return $validation;
-        }
+// // remove lead object (VERY IMPORTANT)
+// unset($inputs['lead']);
+//         $validation = self::validation($inputs);
+//         if (!$validation['success']) {
+//             return $validation;
+//         }
 
-        $item = new self();
-        $item->fill($inputs);
-        $item->save();
+//         $item = new self();
+//         $item->fill($inputs);
+//         $item->save();
 
-        $response = self::getItem($item->id);
-        $response['messages'][] = trans("vaahcms-general.saved_successfully");
-        return $response;
+//         $response = self::getItem($item->id);
+//         $response['messages'][] = trans("vaahcms-general.saved_successfully");
+//         return $response;
 
+//     }
+
+// public static function createItem($request)
+// {
+//     $inputs = $request->all();
+
+//     // Handle lead
+//     if (isset($inputs['lead']) && is_array($inputs['lead'])) {
+//         $inputs['lead_id'] = $inputs['lead']['id'] ?? null;
+//     }
+//     unset($inputs['lead']);
+
+//     // ✅ FIX DATE
+//     if (!empty($inputs['follow_up_date'])) {
+//         $inputs['follow_up_date'] = Carbon::parse($inputs['follow_up_date'])
+//             ->setTimezone('Asia/Kolkata')
+//             ->format('Y-m-d');
+//     }
+
+//     // ✅ FIX TIME
+//     if (!empty($inputs['follow_up_time'])) {
+//         $inputs['follow_up_time'] = Carbon::parse($inputs['follow_up_time'])
+//             ->setTimezone('Asia/Kolkata')
+//             ->format('H:i:s');
+//     }
+
+//     $validation = self::validation($inputs);
+//     if (!$validation['success']) {
+//         return $validation;
+//     }
+
+//     $item = new self();
+//     $item->fill($inputs);
+//     $item->save();
+
+//     $response = self::getItem($item->id);
+//     $response['messages'][] = trans("vaahcms-general.saved_successfully");
+
+//     return $response;
+// }
+
+public static function createItem($request)
+{
+    $inputs = $request->all();
+
+    // Lead mapping
+    if (isset($inputs['lead']) && is_array($inputs['lead'])) {
+        $inputs['lead_id'] = $inputs['lead']['id'] ?? null;
     }
+    unset($inputs['lead']);
+
+    // ✅ DATE FIX
+    if (!empty($inputs['follow_up_date'])) {
+        $inputs['follow_up_date'] = Carbon::parse($inputs['follow_up_date'])
+            ->timezone('Asia/Kolkata')
+            ->toDateString(); // cleaner
+    }
+
+    // ✅ TIME FIX (IMPORTANT CHANGE)
+    if (!empty($inputs['follow_up_time'])) {
+        $inputs['follow_up_time'] = Carbon::parse($inputs['follow_up_time'])
+            ->timezone('Asia/Kolkata')
+            ->format('H:i:s');
+    }
+
+    // DEBUG (optional)
+    // dd($inputs);
+
+    $validation = self::validation($inputs);
+    if (!$validation['success']) {
+        return $validation;
+    }
+
+    $item = new self();
+    $item->fill($inputs);
+
+    // ✅ Force assign (in case fillable issue)
+    $item->follow_up_time = $inputs['follow_up_time'] ?? null;
+
+    $item->save();
+    $response = self::getItem($item->id);
+    $response['messages'][] = trans("vaahcms-general.saved_successfully");
+
+    return $response;
+}
 
     //-------------------------------------------------
     public function scopeGetSorted($query, $filter)

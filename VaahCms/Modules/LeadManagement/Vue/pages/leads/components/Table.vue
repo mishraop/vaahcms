@@ -254,7 +254,7 @@ const useVaah = vaah();
                     <Badge 
                 v-if="store.getFollowUpStatus(slotProps.data)"
                 :value="store.getFollowUpStatus(slotProps.data).label"
-                :severity="store.getFollowUpStatus(slotProps.data).severity"
+            :severity="store.getFollowUpStatus(slotProps.data).severity"
             />
                     {{ slotProps.data.follow_up_date }}
                 </template>

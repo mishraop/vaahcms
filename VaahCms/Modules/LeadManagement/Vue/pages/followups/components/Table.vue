@@ -4,7 +4,15 @@ import { useFollowupStore } from '../../../stores/store-followups'
 
 const store = useFollowupStore();
 const useVaah = vaah();
+const formatDate = (date) => {
+    if (!date) return '';
 
+    return new Date(date).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+};
 
 </script>
 
@@ -55,7 +63,7 @@ const useVaah = vaah();
             />
 
             <span>
-                {{ prop.data.follow_up_date }}
+                 {{ formatDate(prop.data.follow_up_date) }}
             </span>
 
         </div>

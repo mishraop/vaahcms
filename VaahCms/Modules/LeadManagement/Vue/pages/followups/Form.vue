@@ -6,7 +6,7 @@ import VhField from './../../vaahvue/vue-three/primeflex/VhField.vue'
 import {useRoute} from 'vue-router';
 import Calendar from "primevue/calendar";
 import Dropdown from "primevue/dropdown";
-
+const today = new Date();
 
 const store = useFollowupStore();
 const route = useRoute();
@@ -151,6 +151,7 @@ const toggleFormMenu = (event) => {
                     <div class="p-inputgroup">
                         <Calendar dateOnly
                                   dateFormat="yy-mm-dd"
+                                    :minDate="today"
                                   class="w-full"
                                    placeholder="follow up date"
                                    name="followups-follow_up_date"
